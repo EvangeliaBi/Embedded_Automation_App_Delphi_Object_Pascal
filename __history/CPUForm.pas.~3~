@@ -1,0 +1,26 @@
+unit CPUForm;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls;
+
+type
+  TfrmCPU = class(TForm)
+    pnlCenter: TPanel;
+    pnlTop: TPanel;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmCPU: TfrmCPU;
+
+implementation
+
+{$R *.dfm}
+
+end.

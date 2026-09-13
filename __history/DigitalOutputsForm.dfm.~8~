@@ -1,0 +1,103 @@
+object frmDigitalOutputs: TfrmDigitalOutputs
+  Left = 0
+  Top = 0
+  Caption = 'Digital Outputs'
+  ClientHeight = 311
+  ClientWidth = 584
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  Position = poMainFormCenter
+  TextHeight = 15
+  object pnlCenter: TPanel
+    Left = 0
+    Top = 0
+    Width = 584
+    Height = 311
+    Align = alClient
+    TabOrder = 0
+    ExplicitLeft = 200
+    ExplicitTop = 160
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    object gbOutputs: TGroupBox
+      Left = 1
+      Top = 1
+      Width = 185
+      Height = 309
+      Align = alLeft
+      Caption = 'Digital Outputs'
+      TabOrder = 0
+      ExplicitLeft = 104
+      ExplicitTop = 104
+      ExplicitHeight = 105
+      object shOUT8: TShape
+        Left = 88
+        Top = 31
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT9: TShape
+        Left = 88
+        Top = 52
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT10: TShape
+        Left = 88
+        Top = 73
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT11: TShape
+        Left = 88
+        Top = 94
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT12: TShape
+        Left = 88
+        Top = 115
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT13: TShape
+        Left = 88
+        Top = 136
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT14: TShape
+        Left = 88
+        Top = 163
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT15: TShape
+        Left = 88
+        Top = 184
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+    end
+  end
+end

@@ -1,0 +1,69 @@
+unit DigitalOutputsForm;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
+  //
+  EmbeddedCPU;
+
+type
+  TfrmDigitalOutputs = class(TForm)
+    pnlCenter: TPanel;
+    gbOutputs: TGroupBox;
+    shOUT8: TShape;
+    shOUT9: TShape;
+    shOUT10: TShape;
+    shOUT11: TShape;
+    shOUT12: TShape;
+    shOUT13: TShape;
+    shOUT14: TShape;
+    shOUT15: TShape;
+    lblOUT8: TLabel;
+    lblOUT9: TLabel;
+    lblOUT10: TLabel;
+    lblOUT11: TLabel;
+    lblOUT12: TLabel;
+    lblOUT13: TLabel;
+    lblOUT14: TLabel;
+    lblOUT15: TLabel;
+    tmrRefresh: TTimer;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+    FCPU : TEmbeddedCPU;
+    FOutputShapes : array[8..15] of TShape;
+    //
+    procedure UpdateOutputs();
+  public
+    { Public declarations }
+  end;
+
+var
+  frmDigitalOutputs: TfrmDigitalOutputs;
+
+implementation
+
+{$R *.dfm}
+
+{ TfrmDigitalOutputs }
+
+procedure TfrmDigitalOutputs.FormCreate(Sender: TObject);
+begin
+  FOutputShapes[8] := shOUT8;
+  FOutputShapes[9] := shOUT9;
+  FOutputShapes[10] := shOUT10;
+  FOutputShapes[11] := shOUT11;
+  FOutputShapes[12] := shOUT12;
+  FOutputShapes[13] := shOUT13;
+  FOutputShapes[14] := shOUT14;
+  FOutputShapes[15] := shOUT15;
+end;
+
+procedure TfrmDigitalOutputs.UpdateOutputs;
+begin
+
+end;
+
+end.

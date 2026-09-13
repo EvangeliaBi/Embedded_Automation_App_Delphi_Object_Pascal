@@ -1,0 +1,149 @@
+unit DigitalInputsForm;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  //
+  EmbeddedCPU, GPIO;
+
+type
+  TfrmDigitalInputs = class(TForm)
+    pnlCenter: TPanel;
+    gbDigitalInputs: TGroupBox;
+    chkStart: TCheckBox;
+    chkStop: TCheckBox;
+    chkLowLevel: TCheckBox;
+    chkEmergency: TCheckBox;
+    chkHighLevel: TCheckBox;
+    chkPressure: TCheckBox;
+    chkFlow: TCheckBox;
+    chkDoor: TCheckBox;
+    btnAllOff: TButton;
+    btnClose: TButton;
+    gbInformation: TGroupBox;
+    memInfo: TMemo;
+    pnlBottom: TPanel;
+    procedure FormShow(Sender: TObject);
+    procedure chkInputClick(Sender: TObject);
+    procedure btnAllOffClick(Sender: TObject);
+    procedure btnCloseClick(Sender: TObject);
+  private
+    { Private declarations }
+    FCPU : TEmbeddedCPU;
+    //
+    procedure UpdateInputPin(ACheckBox : TCheckBox; APin : Integer);
+    procedure LoadInputStates();
+  public
+    { Public declarations }
+    procedure ConnectCPU(ACPU : TEmbeddedCPU);
+  end;
+
+var
+  frmDigitalInputs: TfrmDigitalInputs;
+
+implementation
+
+{$R *.dfm}
+
+procedure TfrmDigitalInputs.btnAllOffClick(Sender: TObject);
+begin
+  chkStart.Checked     := False;
+  chkStop.Checked      := False;
+  chkEmergency.Checked := False;
+  chkLowLevel.Checked  := False;
+  chkHighLevel.Checked := False;
+  chkPressure.Checked  := False;
+  chkFlow.Checked      := False;
+  chkDoor.Checked      := False;
+end;
+
+procedure TfrmDigitalInputs.btnCloseClick(Sender: TObject);
+begin
+//
+end;
+
+procedure TfrmDigitalInputs.chkInputClick(Sender: TObject);
+begin
+  if Sender = chkStart then
+   begin
+     UpdateInputPin(chkStart, 0);
+   end
+  else if Sender = chkStop then
+   begin
+     UpdateInputPin(chkStop, 1);
+   end
+  else if Sender = chkEmergency then
+   begin
+     UpdateInputPin(chkEmergency, 2);
+   end
+  else if Sender = chkLowLevel then
+   begin
+     UpdateInputPin(chkLowLevel, 3);
+   end
+  else if Sender = chkHighLevel then
+   begin
+     UpdateInputPin(chkHighLevel, 4);
+   end
+  else if Sender = chkPressure then
+   begin
+     UpdateInputPin(chkPressure, 5);
+   end
+  else if Sender = chkFlow then
+   begin
+     UpdateInputPin(chkFlow, 6);
+   end
+  else if Sender = chkDoor then
+   begin
+     UpdateInputPin(chkDoor, 7);
+   end;
+end;
+
+procedure TfrmDigitalInputs.ConnectCPU(ACPU: TEmbeddedCPU);
+begin
+  FCPU := ACPU;
+  //
+  LoadInputStates;
+end;
+
+procedure TfrmDigitalInputs.FormShow(Sender: TObject);
+begin
+  LoadInputStates;
+end;
+
+procedure TfrmDigitalInputs.LoadInputStates;
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  chkStart.Checked     := FCPU.GPIO.ReadPin(0) = gsHigh;
+  chkStop.Checked      := FCPU.GPIO.ReadPin(1) = gsHigh;
+  chkEmergency.Checked := FCPU.GPIO.ReadPin(2) = gsHigh;
+  chkLowLevel.Checked  := FCPU.GPIO.ReadPin(3) = gsHigh;
+  chkHighLevel.Checked := FCPU.GPIO.ReadPin(4) = gsHigh;
+  chkPressure.Checked  := FCPU.GPIO.ReadPin(5) = gsHigh;
+  chkFlow.Checked      := FCPU.GPIO.ReadPin(6) = gsHigh;
+  chkDoor.Checked      := FCPU.GPIO.ReadPin(7) = gsHigh;
+end;
+
+procedure TfrmDigitalInputs.UpdateInputPin(ACheckBox: TCheckBox; APin: Integer);
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  if ACheckBox.Checked then
+   begin
+     FCPU.GPIO.ForceInput(APin, gsHigh);
+   end
+  else
+   begin
+     FCPU.GPIO.ForceInput(APin, gsLow);
+   end;
+end;
+
+end.

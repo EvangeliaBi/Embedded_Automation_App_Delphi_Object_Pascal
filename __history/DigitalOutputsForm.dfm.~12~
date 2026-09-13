@@ -1,0 +1,158 @@
+object frmDigitalOutputs: TfrmDigitalOutputs
+  Left = 0
+  Top = 0
+  Caption = 'Digital Outputs'
+  ClientHeight = 311
+  ClientWidth = 584
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  Position = poMainFormCenter
+  TextHeight = 15
+  object pnlCenter: TPanel
+    Left = 0
+    Top = 0
+    Width = 584
+    Height = 311
+    Align = alClient
+    TabOrder = 0
+    ExplicitLeft = 200
+    ExplicitTop = 160
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    object gbOutputs: TGroupBox
+      Left = 1
+      Top = 1
+      Width = 185
+      Height = 309
+      Align = alLeft
+      Caption = 'Digital Outputs'
+      TabOrder = 0
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      object shOUT8: TShape
+        Left = 124
+        Top = 26
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT9: TShape
+        Left = 124
+        Top = 47
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT10: TShape
+        Left = 124
+        Top = 68
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT11: TShape
+        Left = 124
+        Top = 89
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT12: TShape
+        Left = 124
+        Top = 110
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT13: TShape
+        Left = 124
+        Top = 131
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT14: TShape
+        Left = 124
+        Top = 152
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object shOUT15: TShape
+        Left = 124
+        Top = 173
+        Width = 15
+        Height = 15
+        Brush.Color = clSilver
+        Shape = stCircle
+      end
+      object lblOUT8: TLabel
+        Left = 3
+        Top = 24
+        Width = 102
+        Height = 15
+        Caption = 'GPIO8  Pump Relay'
+      end
+      object lblOUT9: TLabel
+        Left = 3
+        Top = 45
+        Width = 72
+        Height = 15
+        Caption = 'GPIO9  Motor'
+      end
+      object lblOUT10: TLabel
+        Left = 3
+        Top = 66
+        Width = 80
+        Height = 15
+        Caption = 'GPIO10 Valve A'
+      end
+      object lblOUT11: TLabel
+        Left = 3
+        Top = 87
+        Width = 79
+        Height = 15
+        Caption = 'GPIO11 Valve B'
+      end
+      object lblOUT12: TLabel
+        Left = 3
+        Top = 108
+        Width = 74
+        Height = 15
+        Caption = 'GPIO12 Alarm'
+      end
+      object lblOUT13: TLabel
+        Left = 3
+        Top = 129
+        Width = 106
+        Height = 15
+        Caption = 'GPIO13 Cooling Fan'
+      end
+      object lblOUT14: TLabel
+        Left = 3
+        Top = 150
+        Width = 77
+        Height = 15
+        Caption = 'GPIO14 Heater'
+      end
+      object lblOUT15: TLabel
+        Left = 3
+        Top = 171
+        Width = 115
+        Height = 15
+        Caption = 'GPIO15 System Ready'
+      end
+    end
+  end
+end

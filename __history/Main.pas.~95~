@@ -1,0 +1,291 @@
+unit Main;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  //
+  EmbeddedCPU, GPIO, DigitalInputsForm, DigitalOutputsForm, AnalogInputsForm;
+
+type
+  TfrmMain = class(TForm)
+    pnlCenter: TPanel;
+    btnStartCPU: TButton;
+    btnStopCPU: TButton;
+    btnResetCPU: TButton;
+    pnlTop: TPanel;
+    lblCPUState: TLabel;
+    lblCycleCounter: TLabel;
+    lblCycleTime: TLabel;
+    lblCPULoad: TLabel;
+    lblWatchdog: TLabel;
+    lblUptime: TLabel;
+    memLog: TMemo;
+    tmrCPU: TTimer;
+    grpboxGPIO: TGroupBox;
+    shGPIO0: TShape;
+    shGPIO1: TShape;
+    shGPIO2: TShape;
+    shGPIO3: TShape;
+    shGPIO4: TShape;
+    shGPIO5: TShape;
+    shGPIO7: TShape;
+    shGPIO8: TShape;
+    shGPIO9: TShape;
+    shGPIO10: TShape;
+    shGPIO11: TShape;
+    shGPIO13: TShape;
+    shGPIO12: TShape;
+    shGPIO15: TShape;
+    shGPIO14: TShape;
+    shGPIO6: TShape;
+    lblGPIO0: TLabel;
+    lblGPIO1: TLabel;
+    lblGPIO2: TLabel;
+    lblGPIO3: TLabel;
+    lblGPIO4: TLabel;
+    lblGPIO5: TLabel;
+    lblGPIO6: TLabel;
+    lblGPIO7: TLabel;
+    lblGPIO14: TLabel;
+    lblGPIO8: TLabel;
+    lblGPIO9: TLabel;
+    lblGPIO10: TLabel;
+    lblGPIO11: TLabel;
+    lblGPIO12: TLabel;
+    lblGPIO13: TLabel;
+    lblGPIO15: TLabel;
+    btnDigitalInputs: TButton;
+    btnOutputs: TButton;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure btnStartCPUClick(Sender: TObject);
+    procedure btnStopCPUClick(Sender: TObject);
+    procedure btnResetCPUClick(Sender: TObject);
+    procedure tmrCPUTimer(Sender: TObject);
+    procedure btnDigitalInputsClick(Sender: TObject);
+    procedure btnOutputsClick(Sender: TObject);
+  private
+    { Private declarations }
+  FCPU : TEmbeddedCPU;
+  FGPIOShapes: array[0..15] of TShape;
+  //
+  procedure CPULog(const AMessage : string);
+  procedure CPUFault(const AMessage : string);
+  procedure UpdateCPUDisplay();
+  procedure UpdateGPIOView();
+  public
+    { Public declarations }
+  end;
+
+var
+  frmMain: TfrmMain;
+
+implementation
+
+{$R *.dfm}
+
+{ TfrmMain }
+
+procedure TfrmMain.btnDigitalInputsClick(Sender: TObject);
+begin
+  frmDigitalInputs.ConnectCPU(FCPU);
+  frmDigitalInputs.Show;
+end;
+
+procedure TfrmMain.btnOutputsClick(Sender: TObject);
+begin
+  frmDigitalOutputs.ConnectCPU(FCPU);
+  frmDigitalOutputs.Show;
+end;
+
+procedure TfrmMain.btnResetCPUClick(Sender: TObject);
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  FCPU.Reset;
+  tmrCPU.Enabled := True;
+  UpdateCPUDisplay;
+end;
+
+procedure TfrmMain.btnStartCPUClick(Sender: TObject);
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  FCPU.Start;
+  tmrCPU.Enabled := True;
+  UpdateCPUDisplay;
+end;
+
+procedure TfrmMain.btnStopCPUClick(Sender: TObject);
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  tmrCPU.Enabled := False;
+  FCPU.Stop;
+  UpdateCPUDisplay;
+end;
+
+procedure TfrmMain.CPUFault(const AMessage: string);
+begin
+  memLog.Lines.Add(FormatDateTime('hh:nn:ss:zzz', Now) + ' CRITICAL FAULT: ' + AMessage);
+  //
+  lblCPUState.Font.Color := clRed;
+end;
+
+procedure TfrmMain.CPULog(const AMessage: string);
+begin
+  memLog.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' ' + AMessage);
+  memLog.SelStart := Length(memLog.Text);
+  memLog.Perform(EM_SCROLLCARET, 0, 0);
+end;
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+begin
+  memLog.Clear;
+  //
+  FCPU := TEmbeddedCPU.Create();
+  //
+  FGPIOShapes[0] := shGPIO0;
+  FGPIOShapes[1] := shGPIO1;
+  FGPIOShapes[2] := shGPIO2;
+  FGPIOShapes[3] := shGPIO3;
+  FGPIOShapes[4] := shGPIO4;
+  FGPIOShapes[5] := shGPIO5;
+  FGPIOShapes[6] := shGPIO6;
+  FGPIOShapes[7] := shGPIO7;
+  FGPIOShapes[8] := shGPIO8;
+  FGPIOShapes[9] := shGPIO9;
+  FGPIOShapes[10] := shGPIO10;
+  FGPIOShapes[11] := shGPIO11;
+  FGPIOShapes[12] := shGPIO12;
+  FGPIOShapes[13] := shGPIO13;
+  FGPIOShapes[14] := shGPIO14;
+  FGPIOShapes[15] := shGPIO15;
+  //
+  FCPU.OnLog   := CPULog;
+  FCPU.OnFault := CPUFault;
+  FCPU.ScanPeriodMs := 20;
+  FCPU.WatchdogTimeoutMs := 1000;
+  //
+  tmrCPU.Interval := FCPU.ScanPeriodMs;
+  tmrCPU.Enabled  := False;
+  //
+  FCPU.Initialize;
+  // Inputs:
+  FCPU.GPIO.SetMode(0, pmInput);
+  FCPU.GPIO.SetMode(1, pmInput);
+  FCPU.GPIO.SetMode(2, pmInput);
+  FCPU.GPIO.SetMode(3, pmInput);
+  FCPU.GPIO.SetMode(4, pmInput);
+  FCPU.GPIO.SetMode(5, pmInput);
+  FCPU.GPIO.SetMode(6, pmInput);
+  FCPU.GPIO.SetMode(7, pmInput);
+  // Outputs:
+  FCPU.GPIO.SetMode(8, pmOutput);
+  FCPU.GPIO.SetMode(9, pmOutput);
+  FCPU.GPIO.SetMode(10, pmOutput);
+  FCPU.GPIO.SetMode(11, pmOutput);
+  FCPU.GPIO.SetMode(12, pmOutput);
+  FCPU.GPIO.SetMode(13, pmOutput);
+  FCPU.GPIO.SetMode(14, pmOutput);
+  FCPU.GPIO.SetMode(15, pmOutput);
+  //
+  FCPU.GPIO.SetMode(0, pmOutput);
+  FCPU.GPIO.SetMode(1, pmOutput);
+  //
+  UpdateCPUDisplay;
+end;
+
+procedure TfrmMain.FormDestroy(Sender: TObject);
+begin
+  tmrCPU.Enabled := False;
+  //
+  FreeAndNil(FCPU);
+end;
+
+procedure TfrmMain.tmrCPUTimer(Sender: TObject);
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  FCPU.ExecuteCycle;
+  //
+  UpdateCPUDisplay;
+  UpdateGPIOView;
+end;
+
+procedure TfrmMain.UpdateCPUDisplay;
+var
+  Diagnostics : TCPUDiagnostics;
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  Diagnostics := FCPU.GetDiagnostics;
+  //
+  lblCPUState.Caption := 'CPU State: ' + FCPU.StateToString;
+  lblCycleCounter.Caption := Format('Cycles: %d', [Diagnostics.CycleCounter]);
+  lblCycleTime.Caption := Format('Cycle Time: %.3f ms', [Diagnostics.LastCycleTimeMs]);
+  lblCPULoad.Caption := Format('CPU Load: %.2f %%', [Diagnostics.CPULoadPercent]);
+  lblWatchdog.Caption := 'Watchdog: ' + FCPU.WatchdogStateToString;
+  lblUptime.Caption := Format('Uptime: %d s', [Diagnostics.UptimeSeconds]);
+  //
+  case Diagnostics.CPUState of
+    csStopped:
+      lblCPUState.Font.Color := clGray;
+    //
+    csRunning:
+      lblCPUState.Font.Color := clGreen;
+    //
+    csFault:
+      lblCPUState.Font.Color := clRed;
+    //
+    csResetting:
+      lblCPUState.Font.Color := clBlue;
+  end;
+  //
+  case Diagnostics.WatchdogState of
+    wsDisabled:
+      lblWatchdog.Font.Color := clGray;
+    //
+    wsRunning:
+      lblWatchdog.Font.Color := clGreen;
+    //
+    wsExpired:
+      lblWatchdog.Font.Color := clRed;
+  end;
+end;
+
+procedure TfrmMain.UpdateGPIOView;
+var
+  i : Integer;
+begin
+  for i := 0 to 15 do
+   begin
+     if FCPU.GPIO.ReadPin(i) = gsHigh then
+      begin
+        FGPIOShapes[i].Brush.Color := clLime;
+      end
+     else
+      begin
+        FGPIOShapes[i].Brush.Color := clSilver;
+      end;
+   end;
+end;
+
+end.

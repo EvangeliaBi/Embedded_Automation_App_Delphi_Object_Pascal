@@ -1,0 +1,86 @@
+object frmCPU: TfrmCPU
+  Left = 0
+  Top = 0
+  Caption = 'CPU Monitor'
+  ClientHeight = 511
+  ClientWidth = 484
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  Position = poScreenCenter
+  TextHeight = 15
+  object pnlCenter: TPanel
+    Left = 0
+    Top = 0
+    Width = 484
+    Height = 511
+    Align = alClient
+    TabOrder = 0
+    ExplicitLeft = 168
+    ExplicitTop = 128
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    object gbCPUInfo: TGroupBox
+      Left = 1
+      Top = 1
+      Width = 482
+      Height = 180
+      Align = alTop
+      Caption = 'CPU Information'
+      TabOrder = 0
+      ExplicitLeft = 104
+      ExplicitTop = 144
+      ExplicitWidth = 185
+    end
+    object gbRuntime: TGroupBox
+      Left = 1
+      Top = 181
+      Width = 482
+      Height = 120
+      Align = alTop
+      Caption = 'Runtime'
+      TabOrder = 1
+    end
+    object gbCPUControl: TGroupBox
+      Left = 1
+      Top = 301
+      Width = 482
+      Height = 70
+      Align = alTop
+      Caption = 'CPU Control'
+      TabOrder = 2
+      ExplicitLeft = 360
+      ExplicitTop = 336
+      ExplicitWidth = 185
+    end
+    object gbLog: TGroupBox
+      Left = 1
+      Top = 371
+      Width = 482
+      Height = 139
+      Align = alClient
+      Caption = 'CPU Log'
+      TabOrder = 3
+      ExplicitLeft = 392
+      ExplicitTop = 400
+      ExplicitWidth = 185
+      ExplicitHeight = 105
+      object memCPULog: TMemo
+        Left = 2
+        Top = 17
+        Width = 478
+        Height = 120
+        Align = alClient
+        Lines.Strings = (
+          'memCPULog')
+        ReadOnly = True
+        ScrollBars = ssVertical
+        TabOrder = 0
+        ExplicitHeight = 20
+      end
+    end
+  end
+end

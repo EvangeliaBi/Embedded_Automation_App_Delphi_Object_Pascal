@@ -1,0 +1,39 @@
+object frmCPU: TfrmCPU
+  Left = 0
+  Top = 0
+  Caption = 'CPU Monitor'
+  ClientHeight = 411
+  ClientWidth = 484
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  Position = poScreenCenter
+  TextHeight = 15
+  object pnlCenter: TPanel
+    Left = 0
+    Top = 0
+    Width = 484
+    Height = 411
+    Align = alClient
+    TabOrder = 0
+    ExplicitLeft = 168
+    ExplicitTop = 128
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    object pnlTop: TPanel
+      Left = 1
+      Top = 1
+      Width = 482
+      Height = 41
+      Align = alTop
+      Caption = 'CPU Information'
+      TabOrder = 0
+      ExplicitLeft = 192
+      ExplicitTop = 88
+      ExplicitWidth = 185
+    end
+  end
+end

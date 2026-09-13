@@ -1,0 +1,101 @@
+unit ADC;
+
+interface
+
+uses
+  System.SysUtils;
+
+const
+  ADC_CHANNEL_COUNT = 8;
+  ADC_MAX_VALUE = 4095;   // 12 bit ADC.
+
+type
+  TADCChannel = record
+    Number : Integer;
+    Name   : string;
+    Value  : Word;
+  end;
+
+  TADCController = class
+    private
+    FChannels : array[0..ADC_CHANNEL_COUNT-1] of TADCChannel;
+    //
+    procedure CheckChannel(AChannel : Integer);
+    //
+    //
+    public
+    constructor Create();
+    //
+    procedure Reset();
+    procedure SetValue(AChannel : Integer; AValue : Word);
+    //
+    function ReadValue(AChannel : Integer) : Word;
+    function ReadVoltage(AChannel : Integer) : Double;
+    function GetChannel(AChannel : Integer) : TADCChannel;
+  end;
+
+implementation
+
+{ TADCController }
+
+procedure TADCController.CheckChannel(AChannel: Integer);
+begin
+  if(AChannel < 0) or (AChannel >= ADC_CHANNEL_COUNT) then
+   begin
+     raise Exception.CreateFmt('Invalid ADC channel %d', [AChannel]);
+   end;
+end;
+
+constructor TADCController.Create;
+begin
+  inherited;
+  //
+  Reset;
+end;
+
+function TADCController.GetChannel(AChannel: Integer): TADCChannel;
+begin
+  CheckChannel(AChannel);
+  //
+  Result := FChannels[AChannel];
+end;
+
+function TADCController.ReadValue(AChannel: Integer): Word;
+begin
+  CheckChannel(AChannel);
+  //
+  Result := FChannels[AChannel].Value;
+end;
+
+function TADCController.ReadVoltage(AChannel: Integer): Double;
+begin
+  CheckChannel(AChannel);
+  //
+  Result := (FChannels[AChannel].Value / ADC_MAX_VALUE) * 3.3;
+end;
+
+procedure TADCController.Reset;
+var
+  i : Integer;
+begin
+  for i := 0 to ADC_CHANNEL_COUNT-1 do
+   begin
+     FChannels[i].Number := i;
+     FChannels[i].Name   := Format('ADC%d', [i]);
+     FChannels[i].Value  := 0;
+   end;
+end;
+
+procedure TADCController.SetValue(AChannel: Integer; AValue: Word);
+begin
+  CheckChannel(AChannel);
+  //
+  if AValue > ADC_MAX_VALUE then
+   begin
+     AValue := ADC_MAX_VALUE;
+   end;
+  //
+  FChannels[AChannel].Value := AValue;
+end;
+
+end.

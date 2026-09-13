@@ -1,0 +1,137 @@
+unit GPIO;
+
+interface
+
+uses
+  System.SysUtils;
+
+const
+  GPIO_PIN_COUNT = 16;
+
+type
+  TGPIOPinMode = (pmInput, pmOutput);
+  TGPIOPState = (gsLow, gsHigh);
+  //
+  TGPIOPin = record
+    Number : Integer;
+    Name   : string;
+    Mode   : TGPIOPinMode;
+    State  : TGPIOPState;
+  end;
+
+  TGPIOPController = class
+    private
+    FPins : array[0..GPIO_PIN_COUNT-1] of TGPIOPin;
+    //
+    procedure CheckPin(APin : Integer);
+    //
+    public
+    constructor Create();
+    //
+    procedure Reset();
+    procedure SetMode(APin : Integer; AMode : TGPIOPinMode);
+    procedure WritePin(APin : Integer; AState : TGPIOPState);
+    procedure TogglePin(APin : Integer);
+    procedure ForceInput(APin : Integer; AState : TGPIOPState);
+    //
+    function ReadPin(APin : Integer) : TGPIOPState;
+    function GetPin(APin : Integer) : TGPIOPin;
+  end;
+
+implementation
+
+{ TGPIOPController }
+
+procedure TGPIOPController.CheckPin(APin: Integer);
+begin
+  if(APin < 0) or (APin >= GPIO_PIN_COUNT) then
+   begin
+     raise Exception.CreateFmt('Invalid GPIO Pin %d', [APin]);
+   end;
+end;
+
+constructor TGPIOPController.Create;
+begin
+  inherited;
+  //
+  Reset;
+end;
+
+procedure TGPIOPController.ForceInput(APin: Integer; AState: TGPIOPState);
+begin
+  CheckPin(APin);
+  //
+  if FPins[APin].Mode <> pmInput then
+   begin
+     Exit;
+   end;
+  //
+  FPins[APin].State := AState;
+end;
+
+function TGPIOPController.GetPin(APin: Integer): TGPIOPin;
+begin
+  CheckPin(APin);
+  //
+  Result := FPins[APin];
+end;
+
+function TGPIOPController.ReadPin(APin: Integer): TGPIOPState;
+begin
+  CheckPin(APin);
+  //
+  Result := FPins[APin].State;
+end;
+
+procedure TGPIOPController.Reset;
+var
+  i : Integer;
+begin
+  for i := 0 to GPIO_PIN_COUNT-1 do
+   begin
+     FPins[i].Number := i;
+     FPins[i].Name   := Format('GPIOP%d', [i]);
+     FPins[i].Mode   := pmInput;
+     FPins[i].State  := gsLow;
+   end;
+end;
+
+procedure TGPIOPController.SetMode(APin: Integer; AMode: TGPIOPinMode);
+begin
+  CheckPin(APin);
+  //
+  FPins[APin].Mode := AMode;
+end;
+
+procedure TGPIOPController.TogglePin(APin: Integer);
+begin
+  CheckPin(APin);
+  //
+  if FPins[APin].Mode <> pmOutput then
+   begin
+     Exit;
+   end;
+  //
+  if FPins[APin].State = gsLow then
+   begin
+     FPins[APin].State := gsHigh;
+   end
+  else
+   begin
+     FPins[APin].State := gsLow;
+   end;
+end;
+
+procedure TGPIOPController.WritePin(APin: Integer; AState: TGPIOPState);
+begin
+  CheckPin(APin);
+  //
+  if FPins[APin].Mode <> pmOutput then
+   begin
+     Exit;
+   end;
+  //
+  FPins[APin].State := AState;
+end;
+
+end.

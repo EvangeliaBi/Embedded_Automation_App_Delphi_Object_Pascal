@@ -1,0 +1,15 @@
+object frmCPU: TfrmCPU
+  Left = 0
+  Top = 0
+  Caption = 'CPU Monitor'
+  ClientHeight = 411
+  ClientWidth = 484
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  Position = poScreenCenter
+  TextHeight = 15
+end

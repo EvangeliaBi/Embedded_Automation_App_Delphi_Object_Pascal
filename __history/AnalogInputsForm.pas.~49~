@@ -1,0 +1,154 @@
+unit AnalogInputsForm;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls,
+  //
+  EmbeddedCPU, ADC;
+
+type
+  TfrmAnalogInputs = class(TForm)
+    pnlCenter: TPanel;
+    pnlHeader: TPanel;
+    lblTtitle: TLabel;
+    lblSubtitle: TLabel;
+    pnlCenterScreen: TPanel;
+    gbADC0: TGroupBox;
+    lblADC0: TLabel;
+    trkADC0: TTrackBar;
+    lblRaw0: TLabel;
+    lblVoltage0: TLabel;
+    gbADC1: TGroupBox;
+    lblADC1: TLabel;
+    lblRaw1: TLabel;
+    lblVoltage1: TLabel;
+    trkADC1: TTrackBar;
+    gbADC2: TGroupBox;
+    lblADC2: TLabel;
+    lblRaw2: TLabel;
+    lblVoltage2: TLabel;
+    trkADC2: TTrackBar;
+    gbADC3: TGroupBox;
+    lblRaw3: TLabel;
+    lblVoltage3: TLabel;
+    trkADC3: TTrackBar;
+    lblADC3: TLabel;
+    pnlBottom: TPanel;
+    lblResolution: TLabel;
+    lblReference: TLabel;
+    lblChannelsSum: TLabel;
+    gbADC4: TGroupBox;
+    lblADC4: TLabel;
+    lblRaw4: TLabel;
+    lblVoltage4: TLabel;
+    trkADC4: TTrackBar;
+    gbADC5: TGroupBox;
+    lblADC5: TLabel;
+    lblRaw5: TLabel;
+    lblVoltage5: TLabel;
+    trkADC5: TTrackBar;
+    gbADC6: TGroupBox;
+    lblADC6: TLabel;
+    lblRaw6: TLabel;
+    lblVoltage6: TLabel;
+    trkADC6: TTrackBar;
+    gbADC7: TGroupBox;
+    lblADC7: TLabel;
+    lblRaw7: TLabel;
+    lblVoltage7: TLabel;
+    trkADC7: TTrackBar;
+    procedure trkADC0Change(Sender: TObject);
+    procedure trkADC1Change(Sender: TObject);
+    procedure trkADC2Change(Sender: TObject);
+    procedure trkADC3Change(Sender: TObject);
+    procedure trkADC4Change(Sender: TObject);
+    procedure trkADC5Change(Sender: TObject);
+    procedure trkADC6Change(Sender: TObject);
+    procedure trkADC7Change(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+    FCPU : TEmbeddedCPU;
+    //
+    procedure UpdateChannel(AChannel : Integer; ATrackBar : TTrackBar; ARawLabel, AVoltageLabel : TLabel);
+  public
+    { Public declarations }
+  end;
+
+var
+  frmAnalogInputs: TfrmAnalogInputs;
+
+implementation
+
+{$R *.dfm}
+
+{ TfrmAnalogInputs }
+
+procedure TfrmAnalogInputs.FormCreate(Sender: TObject);
+begin
+  trkADC0.Min := 0;
+
+end;
+
+procedure TfrmAnalogInputs.trkADC0Change(Sender: TObject);
+begin
+  UpdateChannel(0, trkADC0, lblRaw0, lblVoltage0);
+end;
+
+procedure TfrmAnalogInputs.trkADC1Change(Sender: TObject);
+begin
+  UpdateChannel(1, trkADC1, lblRaw1, lblVoltage1);
+end;
+
+procedure TfrmAnalogInputs.trkADC2Change(Sender: TObject);
+begin
+  UpdateChannel(2, trkADC2, lblRaw2, lblVoltage2);
+end;
+
+procedure TfrmAnalogInputs.trkADC3Change(Sender: TObject);
+begin
+  UpdateChannel(3, trkADC3, lblRaw3, lblVoltage3);
+end;
+
+procedure TfrmAnalogInputs.trkADC4Change(Sender: TObject);
+begin
+  UpdateChannel(4, trkADC4, lblRaw4, lblVoltage4);
+end;
+
+procedure TfrmAnalogInputs.trkADC5Change(Sender: TObject);
+begin
+  UpdateChannel(5, trkADC5, lblRaw5, lblVoltage5);
+end;
+
+procedure TfrmAnalogInputs.trkADC6Change(Sender: TObject);
+begin
+  UpdateChannel(6, trkADC6, lblRaw6, lblVoltage6);
+end;
+
+procedure TfrmAnalogInputs.trkADC7Change(Sender: TObject);
+begin
+  UpdateChannel(7, trkADC7, lblRaw7, lblVoltage7);
+end;
+
+procedure TfrmAnalogInputs.UpdateChannel(AChannel: Integer; ATrackBar: TTrackBar; ARawLabel, AVoltageLabel: TLabel);
+var
+  RawValue : Word;
+  Voltage  : Double;
+begin
+  if not Assigned(FCPU) then
+   begin
+     Exit;
+   end;
+  //
+  FCPU.ADC.SetValue(AChannel, ATrackBar.Position);
+  //
+  RawValue := FCPU.ADC.ReadValue(AChannel);
+  Voltage := FCPU.ADC.ReadVoltage(AChannel);
+  //
+  ARawLabel.Caption := Format('Raw: %d', [RawValue]);
+  AVoltageLabel.Caption := Format('Voltage: %.2f V', [Voltage]);
+end;
+
+end.

@@ -1,0 +1,423 @@
+unit EmbeddedCPU;
+
+interface
+
+uses
+  System.SysUtils,
+  System.Classes,
+  System.Diagnostics,
+  //
+  GPIO, ADC;
+
+type
+  TCPUState = (csStopped, csRunning, csFault, csResetting);
+  TWatchdogState = (wsDisabled, wsRunning, wsExpired);
+  //
+  TCPUEvent = procedure(const AMessage: string) of object;
+  //
+  TCPUDiagnostics = record
+    CycleCounter       : UInt64;
+    LastCycleTimeMs    : Double;
+    AverageCycleTimeMs : Double;
+    MaximumCycleTimeMs : Double;
+    CPULoadPercent     : Double;
+    UptimeSeconds      : UInt64;
+    WatchdogState      : TWatchdogState;
+    CPUState           : TCPUState;
+  end;
+  //
+  TEmbeddedCPU = class
+    private
+    FClockFrequencyMHz : Integer;
+    FRAMSizeKB         : Integer;
+    FFlashSizeKB       : Integer;
+    FFirmwareVersion   : string;
+    //
+    FState         : TCPUState;
+    FWatchdogState : TWatchdogState;
+    //
+    FCycleCounter       : UInt64;
+    FLastCycleTimeMs    : Double;
+    FTotalCycleTimeMs   : Double;
+    FAverageCycleTimeMs : Double;
+    FMaximumCycleTimeMs : Double;
+    FCPULoadPercent     : Double;
+    //
+    FScanPeriodMs      : Integer;
+    FWatchdogTimeoutMs : Integer;
+    FWatchdogElapsedMs : Integer;
+    //
+    FStartTick      : UInt64;
+    FCycleStopwatch : TStopwatch;
+    //
+    FOnLog   : TCPUEvent;
+    FOnFault : TCPUEvent;
+    //
+    FGPIO : TGPIOPController;
+    //
+    FADC : TADCController;
+    //
+    procedure Log(const AMessage : string);
+    procedure RaiseFault(const AMessage : string);
+    procedure UpdateDiagnostics;
+    procedure UpdateWatchdog;
+    //
+    function GetUptimeSeconds() : UInt64;
+    //
+    public
+    constructor Create();
+    destructor Destroy; override;
+    //
+    procedure Initialize();
+    procedure Start();
+    procedure Stop();
+    procedure Reset();
+    //
+    procedure BeginCycle();
+    procedure EndCycle();
+    procedure ExecuteCycle();
+    //
+    procedure FeedWatchdog();
+    procedure EnableWatchdog();
+    procedure DisableWatchdog();
+    //
+    function GetDiagnostics()        : TCPUDiagnostics;
+    function StateToString()         : string;
+    function WatchdogStateToString() : string;
+    //
+    property ClockFrequencyMHz : Integer read FClockFrequencyMHz write FClockFrequencyMHz;
+    property RAMSizeKB : Integer read FRAMSizeKB write FRAMSizeKB;
+    property FlashSizeKB : Integer read FFlashSizeKB write FFlashSizeKB;
+    property FirmwareVersion : string read FFirmwareVersion write FFirmwareVersion;
+    property State : TCPUState read FState write FState;
+    property WatchdogState : TWatchdogState read FWatchdogState write FWatchdogState;
+    property CycleCounter : UInt64 read FCycleCounter write FCycleCounter;
+    property LastCycleTimeMs : Double read FLastCycleTimeMs write FLastCycleTimeMs;
+    property TotalCycleTimeMs : Double read FTotalCycleTimeMs write FTotalCycleTimeMs;
+    property AverageCycleTimeMs : Double read FAverageCycleTimeMs write FAverageCycleTimeMs;
+    property MaximumCycleTimeMs : Double read FMaximumCycleTimeMs write FMaximumCycleTimeMs;
+    property CPULoadPercent : Double read FCPULoadPercent write FCPULoadPercent;
+    property ScanPeriodMs : Integer read FScanPeriodMs write FScanPeriodMs;
+    property WatchdogTimeoutMs : Integer read FWatchdogTimeoutMs write FWatchdogTimeoutMs;
+    property WatchdogElapsedMs : Integer read FWatchdogElapsedMs write FWatchdogElapsedMs;
+    property StartTick : UInt64 read FStartTick write FStartTick;
+    property CycleStopwatch : TStopwatch read FCycleStopwatch write FCycleStopwatch;
+    property OnLog : TCPUEvent read FOnLog write FOnLog;
+    property OnFault : TCPUEvent read FOnFault write FOnFault;
+    property GPIO : TGPIOPController read FGPIO;
+  end;
+
+implementation
+
+{ TEmbeddedCPU }
+
+procedure TEmbeddedCPU.BeginCycle;
+begin
+  if FState <> csRunning then
+   begin
+     Exit;
+   end;
+  //
+  FCycleStopwatch := TStopwatch.StartNew;
+end;
+
+constructor TEmbeddedCPU.Create;
+begin
+  inherited Create;
+  //
+  FClockFrequencyMHz := 100;
+  FRAMSizeKB         := 256;
+  FFlashSizeKB       := 1024;
+  FFirmwareVersion   := '1.0.0';
+  //
+  FScanPeriodMs      := 20;
+  FWatchdogTimeoutMs := 1000;
+  //
+  FState         := csStopped;
+  FWatchdogState := wsDisabled;
+  //
+  FCycleCounter       := 0;
+  FLastCycleTimeMs    := 0;
+  FTotalCycleTimeMs   := 0;
+  FAverageCycleTimeMs := 0;
+  FMaximumCycleTimeMs := 0;
+  FCPULoadPercent     := 0;
+  //
+  FWatchdogElapsedMs := 0;
+  FStartTick         := 0;
+  //
+  FCycleStopwatch := TStopWatch.Create();
+  //
+  FGPIO := TGPIOPController.Create();
+end;
+
+destructor TEmbeddedCPU.Destroy;
+begin
+  if FState = csRunning then
+   begin
+     Stop;
+   end;
+  //
+  FGPIO.Free();
+  //
+  inherited;
+end;
+
+procedure TEmbeddedCPU.DisableWatchdog;
+begin
+  FWatchdogElapsedMs := 0;
+  FWatchdogState := wsDisabled;
+  //
+  Log('Watchdog disabled');
+end;
+
+procedure TEmbeddedCPU.EnableWatchdog;
+begin
+  FWatchdogElapsedMs := 0;
+  FWatchdogState := wsRunning;
+  //
+  Log(Format('Watchdog Enabled. Timeout: %d ms', [FWatchdogTimeoutMs]));
+end;
+
+procedure TEmbeddedCPU.EndCycle;
+begin
+  if FState <> csRunning then
+   begin
+     Exit;
+   end;
+  //
+  FCycleStopwatch.Stop;
+  FLastCycleTimeMs := FCycleStopwatch.Elapsed.TotalMilliseconds;
+  Inc(FCycleCounter);
+  FTotalCycleTimeMs := FTotalCycleTimeMs + FLastCycleTimeMs;
+  //
+  if FCycleCounter > 0 then
+   begin
+     FAverageCycleTimeMs := FTotalCycleTimeMs / FCycleCounter;
+   end;
+  if FLastCycleTimeMs > FMaximumCycleTimeMs then
+   begin
+     FMaximumCycleTimeMs := FLastCycleTimeMs;
+   end;
+  //
+  UpdateDiagnostics;
+  UpdateWatchdog;
+end;
+
+procedure TEmbeddedCPU.ExecuteCycle;
+begin
+  if FState <> csRunning then
+   begin
+     Exit;
+   end;
+  //
+  BeginCycle;
+  //
+  try
+    FeedWatchdog;
+  Except on E : Exception do
+    begin
+      RaiseFault('CPU cycle error: ' + E.Message);
+      Exit;
+    end;
+  end;
+  EndCycle;
+end;
+
+procedure TEmbeddedCPU.FeedWatchdog;
+begin
+  if FWatchdogState = wsRunning then
+   begin
+     FWatchdogElapsedMs := 0;
+   end;
+end;
+
+function TEmbeddedCPU.GetDiagnostics: TCPUDiagnostics;
+begin
+  Result.CycleCounter       := FCycleCounter;
+  Result.LastCycleTimeMs    := FLastCycleTimeMs;
+  Result.AverageCycleTimeMs := FAverageCycleTimeMs;
+  Result.MaximumCycleTimeMs := FMaximumCycleTimeMs;
+  Result.CPULoadPercent     := FCPULoadPercent;
+  Result.UptimeSeconds      := GetUptimeSeconds;
+  Result.WatchdogState      := FWatchdogState;
+  Result.CPUState           := FState;   
+end;
+
+function TEmbeddedCPU.GetUptimeSeconds: UInt64;
+begin
+  if FStartTick = 0 then
+   begin
+     Exit(0);
+   end;
+  //
+  Result := (TThread.GetTickCount64 - FStartTick) div 1000;
+end;
+
+procedure TEmbeddedCPU.Initialize;
+begin
+  FState := csStopped;
+  //
+  FCycleCounter       := 0;
+  FLastCycleTimeMs    := 0;
+  FTotalCycleTimeMs   := 0;
+  FAverageCycleTimeMs := 0;
+  FMaximumCycleTimeMs := 0;
+  FCPULoadPercent     := 0;
+  //
+  FWatchdogElapsedMs  := 0;
+  FWatchdogState      := wsDisabled;
+  //
+  Log('Embedded CPU initialized');
+  Log(Format('Clock Frequency: %d MHz', [FClockFrequencyMHz]));
+  Log(Format('RAM: %d KB', [FRAMSizeKB]));
+  Log(Format('Flash: %d KB', [FFlashSizeKB]));
+  Log('Firmware Version: ' + FFirmwareVersion);
+  Log(Format('Scan Period: %d ms', [FScanPeriodMs]));
+end;
+
+procedure TEmbeddedCPU.Log(const AMessage: string);
+begin
+  if Assigned(FOnLog) then
+   begin  
+     FOnLog(AMessage);
+   end;
+end;
+
+procedure TEmbeddedCPU.RaiseFault(const AMessage: string);
+begin
+  FState := csFault;
+  Log('CPU FAULT: ' + AMessage);
+  //
+  if Assigned(FOnLog) then
+   begin
+     FOnFault(AMessage);
+   end;
+end;
+
+procedure TEmbeddedCPU.Reset;
+begin
+  FState := csResetting;
+  Log('CPU reset started');
+  //
+  FCycleCounter       := 0;
+  FLastCycleTimeMs    := 0;
+  FTotalCycleTimeMs   := 0;
+  FAverageCycleTimeMs := 0;
+  FMaximumCycleTimeMs := 0;
+  FCPULoadPercent     := 0;
+  //
+  FWatchdogElapsedMs := 0;
+  FWatchdogState     := wsRunning;
+  FStartTick         := TThread.GetTickCount64;
+  //
+  FState := csRunning;
+  Log('CPU reset completed');
+end;
+
+procedure TEmbeddedCPU.Start;
+begin
+  if FState = csRunning then
+   begin
+     Exit;
+   end;
+  //
+  FState := csRunning;
+  FStartTick := TThread.GetTickCount64;
+  FWatchdogElapsedMs := 0;
+  //
+  EnableWatchdog;
+  //
+  Log('Embedded CPU started');
+end;
+
+function TEmbeddedCPU.StateToString: string;
+begin
+  case FState of
+    csStopped:
+      Result := 'STOPPED';
+    //
+    csRunning:
+      Result := 'RUNNING';
+    //
+    csFault:
+      Result := 'FAULT';
+    //
+    csResetting:
+      Result := 'RESETTING';
+    //
+    else
+      Result := 'UNKNOWN';
+  end;    
+end;
+
+procedure TEmbeddedCPU.Stop;
+begin
+  if FState = csStopped then
+   begin
+     Exit;
+   end;
+  //
+  FState := csStopped;
+  DisableWatchdog;
+  //
+  Log('Embedded CPU stopped');
+end;
+
+procedure TEmbeddedCPU.UpdateDiagnostics;
+begin
+  if FScanPeriodMs > 0 then
+   begin
+     FCPULoadPercent := (FLastCycleTimeMs / FScanPeriodMs) * 100;
+   end
+  else
+   begin
+     FCPULoadPercent := 0;
+   end;
+  //
+  if FCPULoadPercent > 100 then
+   begin
+     FCPULoadPercent := 100;
+   end;
+  //
+  if FLastCycleTimeMs > FScanPeriodMs then
+   begin
+     Log(Format('Warning: Scan cycle exceeded target time. Actual: %.3f ms', [FLastCycleTimeMs]));
+   end;
+end;
+
+procedure TEmbeddedCPU.UpdateWatchdog;
+begin
+  if WatchdogState <> wsRunning then
+   begin
+     Exit;
+   end;
+  //
+  Inc(FWatchdogElapsedMs, FScanPeriodMs);
+  //
+  if FWatchdogElapsedMs >= FWatchdogTimeoutMs then
+   begin
+     FWatchdogState := wsExpired;
+     RaiseFault('Watchdog timeout');
+     Reset;
+   end;
+end;
+
+function TEmbeddedCPU.WatchdogStateToString: string;
+begin
+  case FWatchdogState of
+    wsDisabled:
+      Result := 'DISABLED';
+    //
+    wsRunning:
+      Result := 'RUNNING';
+    //
+    wsExpired:
+      Result := 'EXPIRED';
+    //
+    else
+      Result := 'UNKNOWN';
+  end;
+end;
+
+end.

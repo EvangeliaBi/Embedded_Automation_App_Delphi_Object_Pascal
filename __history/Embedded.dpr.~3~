@@ -1,0 +1,25 @@
+program Embedded;
+
+uses
+  Vcl.Forms,
+  Main in 'Main.pas' {frmMain},
+  EmbeddedCPU in 'EmbeddedCPU.pas',
+  Scheduler in 'Scheduler.pas',
+  GPIO in 'GPIO.pas',
+  ADC in 'ADC.pas',
+  PWM in 'PWM.pas',
+  UART in 'UART.pas',
+  InterruptManager in 'InterruptManager.pas',
+  PlantSimulation in 'PlantSimulation.pas',
+  Logger in 'Logger.pas',
+  CPUForm in 'CPUForm.pas' {Form1};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TfrmMain, frmMain);
+  Application.CreateForm(TForm1, Form1);
+  Application.Run;
+end.
